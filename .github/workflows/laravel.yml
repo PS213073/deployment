@@ -47,7 +47,8 @@ jobs:
       env:
         DB_CONNECTION: sqlite
         DB_DATABASE: ':memory:'
-      run: php artisan test --verbose
+      run: php artisan test --log-junit test-reports/junit.xml --coverage-clover test-reports/coverage.xml
+
 
     - name: Upload test reports
       uses: actions/upload-artifact@v2
