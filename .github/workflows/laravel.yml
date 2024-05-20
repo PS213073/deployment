@@ -31,9 +31,6 @@ jobs:
     - name: Run migrations
       run: php artisan migrate --force
 
-    - name: Seed Database
-      run: php artisan db:seed
-
     - name: Execute tests (Unit and Feature tests) via PHPUnit/Pest
       env:
         DB_CONNECTION: sqlite
