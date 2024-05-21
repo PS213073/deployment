@@ -9,8 +9,14 @@ RUN apt-get update && apt-get install -y \
     libxml2-dev \
     zip \
     unzip \
-    && docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath gd \
-    && apt-get clean && rm -rf /var/lib/apt/lists/*
+    sqlite3 \
+    libsqlite3-dev
+
+# Clear cache
+RUN apt-get clean && rm -rf /var/lib/apt/lists/*
+
+# Install PHP extensions
+RUN docker-php-ext-install pdo_mysql pdo_sqlite mbstring exif pcntl bcmath gd
 
 # Install Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
@@ -19,24 +25,19 @@ COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 WORKDIR /var/www
 
 # Copy existing application directory permissions
-COPY . /var/www
+COPY --chown=www-data:www-data . /var/www
 
 # Install project dependencies
-RUN composer install --no-dev --optimize-autoloader --no-interaction
+RUN composer install
 
-# Change owner and permissions of the storage and bootstrap/cache
-RUN chown -R www-data:www-data /var/www/storage /var/www/bootstrap/cache \
-    && chmod -R 755 /var/www/storage /var/www/bootstrap/cache
+# Run database migrations
+RUN php artisan migrate --force
 
-# Enable Apache mod_rewrite
-RUN a2enmod rewrite
+# Change owner and permissions of the storage
+RUN chown -R www-data:www-data /var/www/storage
+RUN chmod -R 755 /var/www/storage
 
-# Expose port 80
+# Set ServerName to suppress Apache warning
+RUN echo "ServerName localhost" >> /etc/apache2/apache2.conf
+
 EXPOSE 80
-
-# Set the Apache document root to /var/www/public
-ENV APACHE_DOCUMENT_ROOT /var/www/public
-
-# Update the default Apache configuration to use the new document root
-RUN sed -ri -e 's!/var/www/html!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/sites-available/*.conf
-RUN sed -ri -e 's!/var/www/html!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/apache2.conf /etc/apache2/conf-available/*.conf
