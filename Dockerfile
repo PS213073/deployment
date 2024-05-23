@@ -30,7 +30,7 @@ RUN ls -la /var/www
 
 # Specifically ensure public directory is copied
 COPY --chown=www-data:www-data ./public /var/www/public
-
+RUN ls -la /var/www/public
 # Install project dependencies
 RUN composer install
 
