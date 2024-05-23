@@ -41,4 +41,3 @@ RUN chmod -R 755 /var/www/storage
 RUN echo "ServerName localhost" >> /etc/apache2/apache2.conf
 
 EXPOSE 80
-ENTRYPOINT ["/public"]
