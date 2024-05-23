@@ -29,7 +29,7 @@ COPY --chown=www-data:www-data . /var/www
 RUN ls -la /var/www
 
 # Specifically ensure public directory is copied
-ADD --chown=www-data:www-data ./public /var/www/public
+COPY --chown=www-data:www-data ./public /var/www/public
 
 # Install project dependencies
 RUN composer install
