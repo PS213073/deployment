@@ -1,29 +1,72 @@
-FROM ubuntu:20.04
+# Start from the PHP 8.2 Apache image
+FROM php:8.2-apache
 
-RUN apt-get update -y
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    git \
+    curl \
+    libpng-dev \
+    libonig-dev \
+    libxml2-dev \
+    zip \
+    unzip \
+    sqlite3 \
+    libsqlite3-dev
 
-#Installing apache in non-interactive mode
-ARG DEBIAN_FRONTEND=noninteractive
+# Clear cache
+RUN apt-get clean && rm -rf /var/lib/apt/lists/*
 
-RUN apt-get install apache2 -y
+# Install PHP extensions
+RUN docker-php-ext-install pdo_mysql pdo_sqlite mbstring exif pcntl bcmath gd
 
-#Installing PHP v 8.2
-RUN apt-get -y install software-properties-common && \
-    add-apt-repository ppa:ondrej/php && \
-    apt-get update && \
-    apt-get -y install php8.2
+# Install Composer
+COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
-#Install required PHP extensions
-RUN apt-get install -y php8.2-bcmath php8.2-fpm php8.2-xml php8.2-mysql php8.2-zip php8.2-intl php8.2-ldap php8.2-gd php8.2-cli php8.2-bz2 php8.2-curl php8.2-mbstring php8.2-pgsql php8.2-opcache php8.2-soap php8.2-cgi
+# Set working directory
+WORKDIR /var/www
 
-#Install Composer
-RUN apt-get update && apt-get -y install php-cli unzip && \
-    cd ~ && apt-get -y install curl && \
-    curl -sS https://getcomposer.org/installer -o /tmp/composer-setup.php && \
-    HASH=`curl -sS https://composer.github.io/installer.sig` && \
-    php -r "if (hash_file('SHA384', '/tmp/composer-setup.php') === '$HASH') { echo 'Installer verified'; } else { echo 'Installer corrupt'; unlink('composer-setup.php'); } echo PHP_EOL;" && \
-    php /tmp/composer-setup.php --install-dir=/usr/local/bin --filename=composer
+# Copy existing application directory permissions
+COPY --chown=www-data:www-data . /var/www
+
+# Install project dependencies
+RUN composer install
+
+# Run database migrations
+RUN php artisan migrate --force
+
+# Change owner and permissions of the storage
+RUN chown -R www-data:www-data /var/www/storage
+RUN chmod -R 755 /var/www/storage
+
+# Set ServerName to suppress Apache warning
+RUN echo "ServerName localhost" >> /etc/apache2/apache2.conf
+
+# NodeJS
+RUN curl -o- https://deb.nodesource.com/setup_16.x | bash
+
+# Dependencies
+RUN apt-get update && apt-get install -y git nginx xz-utils nodejs
+
+# S6 Overlay
+ARG OVERLAY_VERSION="v3.1.1.2"
+ARG OVERLAY_ARCH="x86_64"
+
+ENV S6_KEEP_ENV=1
+ENV S6_CMD_WAIT_FOR_SERVICES_MAXTIME=30000
+
+ADD https://github.com/just-containers/s6-overlay/releases/download/${OVERLAY_VERSION}/s6-overlay-noarch.tar.xz /tmp
+RUN tar -C / -Jxpf /tmp/s6-overlay-noarch.tar.xz
+ADD https://github.com/just-containers/s6-overlay/releases/download/${OVERLAY_VERSION}/s6-overlay-${OVERLAY_ARCH}.tar.xz /tmp
+RUN tar -C / -Jxpf /tmp/s6-overlay-${OVERLAY_ARCH}.tar.xz
+
+# PHP Extensions
+ADD https://github.com/mlocati/docker-php-extension-installer/releases/latest/download/install-php-extensions /usr/local/bin/
+
+RUN chmod +x /usr/local/bin/install-php-extensions && \
+    install-php-extensions %EXTENSIONS%
+
+# Copy files
+COPY files/root/ /
 
 EXPOSE 80
-
-CMD ["apachectl", "-D", "FOREGROUND"]
+ENTRYPOINT [ "/init" ]
