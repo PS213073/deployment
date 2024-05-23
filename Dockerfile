@@ -36,6 +36,14 @@ RUN php artisan migrate --force
 # Change owner and permissions of the storage
 RUN chown -R www-data:www-data /var/www/storage
 RUN chmod -R 755 /var/www/storage
+RUN chown -R www-data:www-data /var/www/bootstrap/cache
+RUN chmod -R 755 /var/www/bootstrap/cache
+
+# Update Apache configuration
+RUN a2enmod rewrite
+RUN sed -i 's!/var/www/html!/var/www/public!g' /etc/apache2/sites-available/000-default.conf
+RUN mv /var/www/public /var/www/html
+
 
 # Set ServerName to suppress Apache warning
 RUN echo "ServerName localhost" >> /etc/apache2/apache2.conf
