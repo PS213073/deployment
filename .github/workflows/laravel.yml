@@ -71,5 +71,5 @@ jobs:
       with:
         context: .
         push: true
-        tags: ps213073369/deployment:latest
+        tags: ps213073/deployment:latest
 
