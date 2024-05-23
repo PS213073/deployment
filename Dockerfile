@@ -26,9 +26,10 @@ WORKDIR /var/www
 
 # Copy existing application directory contents
 COPY --chown=www-data:www-data . /var/www
+RUN ls -la /var/www
 
 # Specifically ensure public directory is copied
-COPY --chown=www-data:www-data ./public /var/www/public
+ADD --chown=www-data:www-data ./public /var/www/public
 
 # Install project dependencies
 RUN composer install
