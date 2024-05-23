@@ -24,11 +24,11 @@ COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 # Set working directory
 WORKDIR /var/www
 
-# Copy existing application directory permissions
+# Copy existing application directory contents
 COPY --chown=www-data:www-data . /var/www
-COPY --chown=www-data:www-data ./public /var/www/public
-COPY --chown=www-data:www-data ./composer.json /var/www/composer.json
 
+# Specifically ensure public directory is copied
+COPY --chown=www-data:www-data ./public /var/www/public
 
 # Install project dependencies
 RUN composer install
