@@ -22,15 +22,17 @@ RUN docker-php-ext-install pdo_mysql pdo_sqlite mbstring exif pcntl bcmath gd
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
 # Set working directory
-WORKDIR /var/www
+WORKDIR /app
 
 # Copy existing application directory contents
-COPY --chown=www-data:www-data . /var/www
-RUN ls -la /var/www
+# COPY --chown=www-data:www-data . /var/www
+COPY . /app
+# RUN ls -la /var/www
 
 # Specifically ensure public directory is copied
-COPY --chown=www-data:www-data ./public /var/www/public
-RUN ls -la /var/www/public
+# COPY --chown=www-data:www-data ./public /var/www/public
+# RUN ls -la /var/www/public
+
 # Install project dependencies
 RUN composer install
 
@@ -38,18 +40,19 @@ RUN composer install
 RUN php artisan migrate --force
 
 # Change owner and permissions of the storage
-RUN chown -R www-data:www-data /var/www/storage
-RUN chmod -R 755 /var/www/storage
-RUN chown -R www-data:www-data /var/www/bootstrap/cache
-RUN chmod -R 755 /var/www/bootstrap/cache
+# RUN chown -R www-data:www-data /var/www/storage
+# RUN chmod -R 755 /var/www/storage
+# RUN chown -R www-data:www-data /var/www/bootstrap/cache
+# RUN chmod -R 755 /var/www/bootstrap/cache
 
-# Update Apache configuration
-RUN a2enmod rewrite
-RUN sed -i 's!/var/www/html!/var/www/public!g' /etc/apache2/sites-available/000-default.conf
-RUN mv /var/www/public /var/www/html
+# # Update Apache configuration
+# RUN a2enmod rewrite
+# RUN sed -i 's!/var/www/html!/var/www/public!g' /etc/apache2/sites-available/000-default.conf
+# RUN mv /var/www/public /var/www/html
 
-CMD php artisan serve --host=0.0.0.0 --port=8181
 # Set ServerName to suppress Apache warning
 # RUN echo "ServerName localhost" >> /etc/apache2/apache2.conf
+
+CMD php artisan serve --host=0.0.0.0 --port=8181
 
 EXPOSE 80
