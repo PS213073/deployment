@@ -96,6 +96,12 @@ jobs:
     - name: Run database migrations
       run: php artisan migrate --force
 
+    - name: Run tests
+      env:
+        DB_CONNECTION: sqlite
+        DB_DATABASE: /var/www/database/database.sqlite
+      run: php artisan test --log-junit test-reports/junit.xml --coverage-clover test-reports/coverage.xml
+
     - name: Display Laravel logs on failure
       if: failure()
       run: cat storage/logs/laravel.log
