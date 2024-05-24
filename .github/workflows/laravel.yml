@@ -7,7 +7,7 @@ on:
     branches: [ "main" ]
 
 jobs:
-  test:
+  build:
     runs-on: ubuntu-latest
 
     steps:
@@ -20,7 +20,7 @@ jobs:
     - name: Set up Node.js
       uses: actions/setup-node@v3
       with:
-        node-version: '16'
+        node-version: '16'  # Use the Node.js version your project requires
 
     - name: Install frontend dependencies
       run: npm ci
@@ -28,8 +28,8 @@ jobs:
     - name: Build frontend assets
       run: npm run build
 
-    # - name: Set up testing environment
-    #   run: cp .env.example .env
+    - name: Set up testing environment
+      run: cp .env.testing .env
 
     - name: Install PHP dependencies
       run: composer install -q --no-ansi --no-interaction --no-scripts --no-progress --prefer-dist
@@ -49,57 +49,12 @@ jobs:
         DB_DATABASE: ':memory:'
       run: php artisan test --log-junit test-reports/junit.xml --coverage-clover test-reports/coverage.xml
 
+
     - name: Upload test reports
       uses: actions/upload-artifact@v2
       with:
         name: test-reports
         path: test-reports
-
-    - name: Display Laravel logs on failure
-      if: failure()
-      run: cat storage/logs/laravel.log
-
-  deploy:
-    runs-on: ubuntu-latest
-
-    steps:
-    - uses: actions/checkout@v4
-
-    - uses: shivammathur/setup-php@15c43e89cdef867065b0213be354c2841860869e
-      with:
-        php-version: '8.2'
-
-    - name: Set up Node.js
-      uses: actions/setup-node@v3
-      with:
-        node-version: '16'
-
-    - name: Install frontend dependencies
-      run: npm ci
-
-    - name: Build frontend assets
-      run: npm run build
-
-    - name: Set up testing environment
-      run: cp .env.example .env
-
-    - name: Create SQLite database directory and file
-      run: |
-        mkdir -p /var/www/database
-        touch /var/www/database/database.sqlite
-        chmod 664 /var/www/database/database.sqlite
-
-    - name: Install PHP dependencies
-      run: composer install -q --no-ansi --no-interaction --no-scripts --no-progress --prefer-dist
-
-    - name: Generate application key
-      run: php artisan key:generate
-
-    - name: Set directory permissions
-      run: chmod -R 777 storage bootstrap/cache
-
-    - name: Run database migrations
-      run: php artisan migrate --force
 
     - name: Display Laravel logs on failure
       if: failure()
