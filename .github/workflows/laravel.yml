@@ -7,68 +7,68 @@ on:
     branches: [ "main" ]
 
 jobs:
-  test:
+  build:
     runs-on: ubuntu-latest
+
     steps:
-      - name: Check out code
-        uses: actions/checkout@v2
+    - uses: actions/checkout@v4
 
-      - name: Set up testing environment
-        run: cp .env.testing .env
+    - uses: shivammathur/setup-php@15c43e89cdef867065b0213be354c2841860869e
+      with:
+        php-version: '8.2'
 
-      - name: Install PHP dependencies
-        run: composer install -q --no-ansi --no-interaction --no-scripts --no-progress --prefer-dist
+    - name: Set up Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '16'  # Use the Node.js version your project requires
 
-      - name: Generate application key
-        run: php artisan key:generate
+    - name: Install frontend dependencies
+      run: npm ci
 
-      - name: Set directory permissions
-        run: chmod -R 777 storage bootstrap/cache
+    - name: Build frontend assets
+      run: npm run build
 
-      - name: Run database migrations
-        run: php artisan migrate --force
+    - name: Set up testing environment
+      run: cp .env.testing .env
 
-      - name: Run tests
-        env:
-          DB_CONNECTION: sqlite
-          DB_DATABASE: ':memory:'
-        run: php artisan test --log-junit test-reports/junit.xml --coverage-clover test-reports/coverage.xml
+    - name: Install PHP dependencies
+      run: composer install -q --no-ansi --no-interaction --no-scripts --no-progress --prefer-dist
 
-  deploy:
-    runs-on: ubuntu-latest
-    needs: test
-    steps:
-      - name: Check out code
-        uses: actions/checkout@v2
+    - name: Generate application key
+      run: php artisan key:generate
 
-      - name: Install PHP dependencies
-        run: composer install -q --no-ansi --no-interaction --no-scripts --no-progress --prefer-dist
+    - name: Set directory permissions
+      run: chmod -R 777 storage bootstrap/cache
 
-      - name: Copy .env.example to .env
-        run: cp .env.example .env
+    - name: Run database migrations
+      run: php artisan migrate --force
 
-      - name: Generate application key
-        run: php artisan key:generate
+    - name: Run tests
+      env:
+        DB_CONNECTION: sqlite
+        DB_DATABASE: ':memory:'
+      run: php artisan test --log-junit test-reports/junit.xml --coverage-clover test-reports/coverage.xml
 
-      - name: Set directory permissions
-        run: chmod -R 775 storage bootstrap/cache
 
-      - name: Run database migrations
-        run: php artisan migrate --force
+    - name: Upload test reports
+      uses: actions/upload-artifact@v2
+      with:
+        name: test-reports
+        path: test-reports
 
-      - name: Login to DockerHub
-        uses: docker/login-action@v1
-        with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
+    - name: Display Laravel logs on failure
+      if: failure()
+      run: cat storage/logs/laravel.log
 
-      - name: Build and push Docker image
-        uses: docker/build-push-action@v2
-        with:
-          context: .
-          push: true
-          tags: ps213073/deployment:latest
+    - name: Login to DockerHub
+      uses: docker/login-action@v1
+      with:
+        username: ${{ secrets.DOCKERHUB_USERNAME }}
+        password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Display Laravel logs on failure
-        if: failure()
-        run: cat storage/logs/laravel.log
+    - name: Build and push Docker image
+      uses: docker/build-push-action@v2
+      with:
+        context: .
+        push: true
+        tags: ps213073/deployment:latest
