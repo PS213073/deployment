@@ -25,40 +25,34 @@ COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 WORKDIR /var/www
 
 # Copy existing application directory contents
-COPY --chown=www-data:www-data . /var/www
-RUN ls -la /var/www
+COPY . /var/www
 
-# Specifically ensure public directory is copied
-COPY --chown=www-data:www-data ./public /var/www/public
-RUN ls -la /var/www/public
 # Install project dependencies
 RUN composer install
 
-# Run database migrations
-RUN php artisan migrate --force
+# Ensure the 'public' directory is set as DocumentRoot
+RUN sed -i 's!/var/www/html!/var/www/public!g' /etc/apache2/sites-available/000-default.conf
 
-# Change owner and permissions of the storage
-# RUN chown -R www-data:www-data /var/www/storage
-# RUN chmod -R 755 /var/www/storage
-# RUN chown -R www-data:www-data /var/www/bootstrap/cache
-# RUN chmod -R 755 /var/www/bootstrap/cache
+# Enable Apache mod_rewrite
+RUN a2enmod rewrite
 
-# # Update Apache configuration
-# RUN a2enmod rewrite
-# RUN sed -i 's!/var/www/html!/var/www/public!g' /etc/apache2/sites-available/000-default.conf
-# RUN mv /var/www/public /var/www/html
+# Set permissions for Laravel directories
+RUN chown -R www-data:www-data /var/www/storage /var/www/bootstrap/cache
+RUN chmod -R 775 /var/www/storage /var/www/bootstrap/cache
 
-# Add user for laravel application
+# Ensure 'public' directory has correct permissions
+RUN chown -R www-data:www-data /var/www/public
+RUN chmod -R 755 /var/www/public
+
+# Add user for Laravel application
 RUN groupadd -g 1000 www
 RUN useradd -u 1000 -ms /bin/bash -g www www
 
-# Copy existing application directory permissions
-COPY --chown=www:www . /var/www
-
-# Change current user to www
-USER www
+# Change current user to www-data (Apache user)
+USER www-data
 
 # Set ServerName to suppress Apache warning
-# RUN echo "ServerName localhost" >> /etc/apache2/apache2.conf
+RUN echo "ServerName localhost" >> /etc/apache2/apache2.conf
 
 EXPOSE 80
+CMD ["apache2-foreground"]
