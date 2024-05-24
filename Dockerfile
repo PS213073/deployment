@@ -44,6 +44,10 @@ RUN chmod -R 775 /var/www/storage /var/www/bootstrap/cache
 RUN chown -R www-data:www-data /var/www/public
 RUN chmod -R 755 /var/www/public
 
+# Set permissions for SQLite database file
+RUN chown www-data:www-data /var/www/database/database.sqlite
+RUN chmod 664 /var/www/database/database.sqlite
+
 # Add user for Laravel application
 RUN groupadd -g 1000 www
 RUN useradd -u 1000 -ms /bin/bash -g www www
