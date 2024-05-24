@@ -59,6 +59,6 @@ COPY --chown=www:www . /var/www
 USER www
 
 # Set ServerName to suppress Apache warning
-RUN echo "ServerName localhost" >> /etc/apache2/apache2.conf
+# RUN echo "ServerName localhost" >> /etc/apache2/apache2.conf
 
 EXPOSE 80
