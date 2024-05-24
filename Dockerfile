@@ -24,12 +24,6 @@ COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 # Set working directory
 WORKDIR /var/www
 
-# Create directory for SQLite database file
-RUN mkdir -p database
-
-# Create SQLite database file
-RUN touch database/database.sqlite
-
 # Copy existing application directory contents
 COPY . /var/www
 
@@ -50,17 +44,19 @@ RUN chmod -R 775 /var/www/storage /var/www/bootstrap/cache
 RUN chown -R www-data:www-data /var/www/public
 RUN chmod -R 755 /var/www/public
 
-# Set permissions for SQLite database file
-RUN chown www-data:www-data /var/www/database/database.sqlite
-RUN chmod 664 /var/www/database/database.sqlite
-
-# Run database migrations
-USER www-data
-CMD ["php", "artisan", "migrate", "--force"]
+# Create SQLite database file and set permissions
+RUN touch database/database.sqlite
+RUN chown www-data:www-data database/database.sqlite
+RUN chmod 664 database/database.sqlite
 
 # Add user for Laravel application
 RUN groupadd -g 1000 www
 RUN useradd -u 1000 -ms /bin/bash -g www www
+RUN usermod -a -G www-data www
+
+# Set permissions for Laravel application directory
+RUN chown -R www-data:www-data /var/www
+RUN chmod -R 775 /var/www
 
 # Change current user to www-data (Apache user)
 USER www-data
