@@ -48,8 +48,8 @@ RUN a2enmod rewrite
 RUN sed -i 's!/var/www/html!/var/www/public!g' /etc/apache2/sites-available/000-default.conf
 RUN mv /var/www/public /var/www/html
 
-
+CMD php artisan serve --host=0.0.0.0 --port=8181
 # Set ServerName to suppress Apache warning
-RUN echo "ServerName localhost" >> /etc/apache2/apache2.conf
+# RUN echo "ServerName localhost" >> /etc/apache2/apache2.conf
 
 EXPOSE 80
