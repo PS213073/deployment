@@ -24,20 +24,17 @@ COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 # Set working directory
 WORKDIR /var/www
 
-# Create directory for SQLite database file
-RUN mkdir -p database
-
-# Create SQLite database file
-RUN touch database/database.sqlite
-
 # Copy existing application directory contents
 COPY . /var/www
 
 # Install project dependencies
 RUN composer install
 
-# Run database migrations
-RUN php artisan migrate --force
+# Ensure the 'public' directory is set as DocumentRoot
+RUN sed -i 's!/var/www/html!/var/www/public!g' /etc/apache2/sites-available/000-default.conf
+
+# Enable Apache mod_rewrite
+RUN a2enmod rewrite
 
 # Set permissions for Laravel directories
 RUN chown -R www-data:www-data /var/www/storage /var/www/bootstrap/cache
@@ -47,8 +44,12 @@ RUN chmod -R 775 /var/www/storage /var/www/bootstrap/cache
 RUN chown -R www-data:www-data /var/www/public
 RUN chmod -R 755 /var/www/public
 
-# Enable Apache mod_rewrite
-RUN a2enmod rewrite
+# Add user for Laravel application
+RUN groupadd -g 1000 www
+RUN useradd -u 1000 -ms /bin/bash -g www www
+
+# Change current user to www-data (Apache user)
+USER www-data
 
 # Set ServerName to suppress Apache warning
 # RUN echo "ServerName localhost" >> /etc/apache2/apache2.conf
