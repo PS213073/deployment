@@ -28,8 +28,8 @@ jobs:
     - name: Build frontend assets
       run: npm run build
 
-    - name: Set up testing environment
-      run: cp .env.example .env
+    # - name: Set up testing environment
+    #   run: cp .env.example .env
 
     - name: Install PHP dependencies
       run: composer install -q --no-ansi --no-interaction --no-scripts --no-progress --prefer-dist
@@ -83,10 +83,11 @@ jobs:
     - name: Set up testing environment
       run: cp .env.example .env
 
-    - name: Create SQLite database file
+    - name: Create SQLite database directory and file
       run: |
-       touch /var/www/database/database.sqlite
-       chmod 664 /var/www/database/database.sqlite
+        mkdir -p /var/www/database
+        touch /var/www/database/database.sqlite
+        chmod 664 /var/www/database/database.sqlite
 
     - name: Install PHP dependencies
       run: composer install -q --no-ansi --no-interaction --no-scripts --no-progress --prefer-dist
