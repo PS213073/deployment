@@ -54,6 +54,10 @@ RUN chmod -R 755 /var/www/public
 RUN chown www-data:www-data /var/www/database/database.sqlite
 RUN chmod 664 /var/www/database/database.sqlite
 
+# Run database migrations
+USER www-data
+CMD ["php", "artisan", "migrate", "--force"]
+
 # Add user for Laravel application
 RUN groupadd -g 1000 www
 RUN useradd -u 1000 -ms /bin/bash -g www www
