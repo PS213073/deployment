@@ -61,6 +61,9 @@ RUN chmod -R 775 /var/www
 # Change current user to www-data (Apache user)
 USER www-data
 
+# Run migrations command
+RUN php artisan migrate
+
 # Set ServerName to suppress Apache warning
 # RUN echo "ServerName localhost" >> /etc/apache2/apache2.conf
 
