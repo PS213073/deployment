@@ -24,6 +24,9 @@ COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 # Set working directory
 WORKDIR /var/www
 
+# Create SQLite database file
+RUN touch database/database.sqlite
+
 # Copy existing application directory contents
 COPY . /var/www
 
