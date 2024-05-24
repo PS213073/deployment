@@ -46,7 +46,7 @@ jobs:
     - name: Run tests
       env:
         DB_CONNECTION: sqlite
-        DB_DATABASE: ':memory:'
+        DB_DATABASE: /var/www/database/database.sqlite
       run: php artisan test --log-junit test-reports/junit.xml --coverage-clover test-reports/coverage.xml
 
 
