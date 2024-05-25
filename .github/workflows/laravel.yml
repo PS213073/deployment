@@ -44,9 +44,9 @@ jobs:
       run: php artisan migrate --force
 
     - name: Run tests
-      # env:
-      #   DB_CONNECTION: sqlite
-      #   DB_DATABASE: ':memory:'
+      env:
+        DB_CONNECTION: sqlite
+        DB_DATABASE: ':memory:'
       run: php artisan test --log-junit test-reports/junit.xml --coverage-clover test-reports/coverage.xml
 
 
