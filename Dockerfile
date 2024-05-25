@@ -50,7 +50,7 @@ RUN chown www-data:www-data database/database.sqlite
 RUN chmod 664 database/database.sqlite
 
 # Ensure the .env file has the correct database path
-RUN sed -i 's|DB_DATABASE=.*|DB_DATABASE=/var/www/database/database.sqlite|' /var/www/.env
+# RUN sed -i 's|DB_DATABASE=.*|DB_DATABASE=/var/www/database/database.sqlite|' /var/www/.env
 
 # Add user for Laravel application
 RUN groupadd -g 1000 www
