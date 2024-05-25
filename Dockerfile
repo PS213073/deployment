@@ -50,7 +50,7 @@ RUN chown www-data:www-data database/database.sqlite
 RUN chmod 664 database/database.sqlite
 
 # Ensure the .env file has the correct database path
-# RUN sed -i 's|DB_DATABASE=.*|DB_DATABASE=/var/www/database/database.sqlite|' /var/www/.env
+RUN sed -i 's|DB_DATABASE=.*|DB_DATABASE=/var/www/database/database.sqlite|' /var/www/.env
 
 # Add user for Laravel application
 RUN groupadd -g 1000 www
@@ -65,7 +65,7 @@ RUN chmod -R 775 /var/www
 USER www-data
 
 # Set ServerName to suppress Apache warning
-# RUN echo "ServerName localhost" >> /etc/apache2/apache2.conf
+RUN echo "ServerName localhost" >> /etc/apache2/apache2.conf
 
 EXPOSE 80
 CMD ["apache2-foreground"]
